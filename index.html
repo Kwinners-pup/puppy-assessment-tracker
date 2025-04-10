@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppy Temperament Assessment Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .events-container {
+            display: flex;
+            gap: 20px;
+        }
+        .timeline {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            height: 500px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .event-item:hover {
+            background-color: #ecf0f1;
+        }
+        .event-time {
+            font-weight: bold;
+            color: #3498db;
+            cursor: pointer;
+        }
+        .event-description {
+            margin-top: 5px;
+        }
+        .event-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .tag {
+            background-color: #e0f7fa;
+            color: #00838f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .details-panel {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: white;
+            height: 500px;
+            overflow-y: auto;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .tag-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .tag-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #export-area {
+            width: 100%;
+            min-height: 200px;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            display: none;
+        }
+        .highlight {
+            background-color: #fff9c4 !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Puppy Temperament Assessment Tracker</h1>
+    
+    <div class="video-container">
+        <!-- Replace VIDEO_ID with your YouTube video ID -->
+        <iframe id="youtube-player" width="560" height="315" src="about:blank" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    
+    <div class="controls">
+        <input type="text" id="video-id" placeholder="Enter YouTube Video ID" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; width: 250px;">
+        <button id="load-video">Load Video</button>
+        <button id="import-data">Import Data</button>
+        <button id="export-data">Export Data for LLM</button>
+        <button id="save-local">Save to Local Storage</button>
+        <button id="download-json">Download JSON</button>
+        <div style="flex-grow: 1;"></div>
+        <button id="add-event">Add New Event</button>
+    </div>
+    
+    <div class="filter-container" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+        <label><strong>Filter by tags:</strong></label>
+        <div id="tag-filters" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+        <button id="clear-filters" style="margin-left: auto;">Clear Filters</button>
+    </div>
+    
+    <div class="events-container">
+        <div class="timeline" id="events-timeline">
+            <!-- Events will be inserted here -->
+        </div>
+        
+        <div class="details-panel" id="event-details">
+            <h3>Event Details</h3>
+            <div id="edit-form">
+                <div class="form-group">
+                    <label for="event-time-input">Time (MM:SS):</label>
+                    <input type="text" id="event-time-input" placeholder="00:00" style="width: 100px; padding: 5px; margin-bottom: 10px;">
+                </div>
+                <div class="form-group">
+                    <label for="event-description-input">Description:</label>
+                    <textarea id="event-description-input" placeholder="Describe what happens at this timestamp..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tags:</label>
+                    <div class="tag-input">
+                        <input type="text" id="tag-input" placeholder="Add temperament trait tag (e.g., fearful, confident)">
+                        <button id="add-tag">Add Tag</button>
+                    </div>
+                    <div id="tags-container" class="event-tags">
+                        <!-- Tags will be added here -->
+                    </div>
+                </div>
+                <button id="save-event" style="margin-top: 10px;">Save Event</button>
+            </div>
+        </div>
+    </div>
+    
+    <textarea id="export-area"></textarea>
+    
+    <script>
+        // Initialize variables
+        let player;
+        let events = [];
+        let currentEventIndex = -1;
+        
+        // YouTube API integration
+        function loadYouTubeAPI() {
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+        
+        window.onYouTubeIframeAPIReady = function() {
+            // YouTube API is ready, but we'll load the video when the user clicks the button
+            document.getElementById('load-video').addEventListener('click', function() {
+                const videoId = document.getElementById('video-id').value.trim();
+                if (videoId) {
+                    if (player) {
+                        player.loadVideoById(videoId);
+                    } else {
+                        player = new YT.Player('youtube-player', {
+                            videoId: videoId,
+                            events: {
+                                'onReady': onPlayerReady
+                            }
+                        });
+                    }
+                } else {
+                    alert('Please enter a YouTube Video ID');
+                }
+            });
+        };
+        
+        function onPlayerReady(event) {
+            event.target.pauseVideo();
+        }
+        
+        // Helper function to convert time string to seconds
+        function timeToSeconds(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length === 2) {
+                return parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+            } else if (parts.length === 3) {
+                return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
+            }
+            return parseFloat(timeStr);
+        }
+        
+        // Helper function to format seconds as MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Active tag filters
+        let activeFilters = [];
+        
+        // Update the timeline with all events
+        function renderTimeline() {
+            const timeline = document.getElementById('events-timeline');
+            timeline.innerHTML = '';
+            
+            // Sort events by time
+            events.sort((a, b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+            
+            // Filter events based on active tag filters
+            const filteredEvents = activeFilters.length > 0 
+                ? events.filter(event => 
+                    activeFilters.some(filter => 
+                        event.tags && event.tags.some(tag => tag.toLowerCase() === filter.toLowerCase())
+                    )
+                )
+                : events;
+            
+            filteredEvents.forEach((event, index) => {
+                const originalIndex = events.indexOf(event);
+                const eventEl = document.createElement('div');
+                eventEl.className = 'event-item';
+                if (originalIndex === currentEventIndex) {
+                    eventEl.classList.add('highlight');
+                }
+                
+                const timeEl = document.createElement('div');
+                timeEl.className = 'event-time';
+                timeEl.textContent = event.time;
+                timeEl.addEventListener('click', () => {
+                    if (player) {
+                        player.seekTo(timeToSeconds(event.time));
+                    }
+                });
+                
+                const descEl = document.createElement('div');
+                descEl.className = 'event-description';
+                descEl.textContent = event.description;
+                
+                const tagsEl = document.createElement('div');
+                tagsEl.className = 'event-tags';
+                
+                if (event.tags && event.tags.length > 0) {
+                    event.tags.forEach(tag => {
+                        const tagEl = document.createElement('span');
+                        tagEl.className = 'tag';
+                        if (activeFilters.includes(tag.toLowerCase())) {
+                            tagEl.style.backgroundColor = '#81c784';  // Highlight active filter tags
+                            tagEl.style.color = '#1b5e20';
+                        }
+                        tagEl.textContent = tag;
+                        
+                        // Allow clicking on tags in the event list to filter by that tag
+                        tagEl.style.cursor = 'pointer';
+                        tagEl.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Don't trigger the parent click event
+                            toggleTagFilter(tag);
+                        });
+                        
+                        tagsEl.appendChild(tagEl);
+                    });
+                }
+                
+                eventEl.appendChild(timeEl);
+                eventEl.appendChild(descEl);
+                eventEl.appendChild(tagsEl);
+                
+                eventEl.addEventListener('click', () => {
+                    currentEventIndex = originalIndex;
+                    displayEventDetails(event);
+                    renderTimeline(); // Re-render to show highlight
+                });
+                
+                timeline.appendChild(eventEl);
+            });
+            
+            // Show a message if no events match the filter
+            if (filteredEvents.length === 0 && activeFilters.length > 0) {
+                const noResults = document.createElement('div');
+                noResults.style.padding = '20px';
+                noResults.style.textAlign = 'center';
+                noResults.style.color = '#666';
+                noResults.textContent = 'No events match the selected tags.';
+                timeline.appendChild(noResults);
+            }
+            
+            // Update the tag filters display
+            updateTagFiltersUI();
+        }
+        
+        // Toggle a tag filter on/off
+        function toggleTagFilter(tag) {
+            const tagLower = tag.toLowerCase();
+            const index = activeFilters.indexOf(tagLower);
+            
+            if (index === -1) {
+                activeFilters.push(tagLower);
+            } else {
+                activeFilters.splice(index, 1);
+            }
+            
+            renderTimeline();
+        }
+        
+        // Update the tag filters UI
+        function updateTagFiltersUI() {
+            const tagsContainer = document.getElementById('tag-filters');
+            tagsContainer.innerHTML = '';
+            
+            // Collect all unique tags from all events
+            const allTags = new Set();
+            events.forEach(event => {
+                if (event.tags && event.tags.length > 0) {
+                    event.tags.forEach(tag => allTags.add(tag.toLowerCase()));
+                }
+            });
+            
+            // Create a filter button for each unique tag
+            Array.from(allTags).sort().forEach(tag => {
+                const tagBtn = document.createElement('button');
+                tagBtn.className = 'tag';
+                tagBtn.textContent = tag;
+                tagBtn.style.cursor = 'pointer';
+                tagBtn.style.padding = '5px 10px';
+                
+                if (activeFilters.includes(tag)) {
+                    tagBtn.style.backgroundColor = '#81c784';
+                    tagBtn.style.color = '#1b5e20';
+                    tagBtn.style.fontWeight = 'bold';
+                }
+                
+                tagBtn.addEventListener('click', () => {
+                    toggleTagFilter(tag);
+                });
+                
+                tagsContainer.appendChild(tagBtn);
+            });
+        }
+        
+        // Display event details in the edit panel
+        function displayEventDetails(event) {
+            document.getElementById('event-time-input').value = event.time;
+            document.getElementById('event-description-input').value = event.description;
+            
+            const tagsContainer = document.getElementById('tags-container');
+            tagsContainer.innerHTML = '';
+            
+            if (event.tags && event.tags.length > 0) {
+                event.tags.forEach(tag => {
+                    addTagToUI(tag);
+                });
+            }
+        }
+        
+        // Add a tag to the UI
+        function addTagToUI(tagText) {
+            const tagsContainer = document.getElementById('tags-container');
+            
+            const tagEl = document.createElement('span');
+            tagEl.className = 'tag';
+            tagEl.textContent = tagText;
+            
+            const removeBtn = document.createElement('span');
+            removeBtn.textContent = ' ×';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.style.marginLeft = '3px';
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tagEl.remove();
+            });
+            
+            tagEl.appendChild(removeBtn);
+            tagsContainer.appendChild(tagEl);
+        }
+        
+        // Initialize sample data
+        function initializeWithSampleData() {
+            events = [
+                { time: "00:17", description: "Dog places front paws on person's legs.", tags: ["social", "greeting"] },
+                { time: "00:43", description: "Two barks. First notices dog prop, about 8 body lengths away, takes one step forward, turns towards seated tester, barks twice while tossing head back, facing dog prop again.", tags: ["vocalization", "alertness", "visual sensitivity"] },
+                { time: "00:54", description: "Whine.", tags: ["vocalization", "stress"] },
+                { time: "01:14", description: "Dog places front paws on person's legs. Dog crawls into person's lap. Looks over tester's shoulder to visualize dog prop for 1 second until tester stands up.", tags: ["social", "seeking comfort"] },
+                { time: "01:31", description: "Whine then bark. Looks at tester, then at dog prop about 7 body lengths away, steps toward it, whines briefly, then barks and turns away with ears to sides/back. Continues to whine briefly.", tags: ["vocalization", "stress", "fear"] },
+                { time: "01:39", description: "Tester walks across room.", tags: ["human movement"] },
+                { time: "01:47", description: "Barks.", tags: ["vocalization"] },
+                { time: "01:53", description: "Beginning of Biddability exercise.", tags: ["test section"] },
+                { time: "02:40", description: "Barks.", tags: ["vocalization"] },
+                { time: "05:20", description: "Barks.", tags: ["vocalization"] }
+            ];
+            
+            renderTimeline();
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Add event button
+            document.getElementById('add-event').addEventListener('click', () => {
+                const newEvent = {
+                    time: "00:00",
+                    description: "",
+                    tags: []
+                };
+                
+                events.push(newEvent);
+                currentEventIndex = events.length - 1;
+                displayEventDetails(newEvent);
+                renderTimeline();
+            });
+            
+            // Save event button
+            document.getElementById('save-event').addEventListener('click', () => {
+                if (currentEventIndex >= 0 && currentEventIndex < events.length) {
+                    const time = document.getElementById('event-time-input').value;
+                    const description = document.getElementById('event-description-input').value;
+                    
+                    // Collect tags
+                    const tagsElements = document.getElementById('tags-container').getElementsByClassName('tag');
+                    const tags = Array.from(tagsElements).map(el => el.textContent.replace(' ×', ''));
+                    
+                    events[currentEventIndex] = {
+                        time,
+                        description,
+                        tags
+                    };
+                    
+                    renderTimeline();
+                    
+                    // Auto-save to local storage
+                    saveToLocalStorage();
+                }
+            });
+            
+            // Add tag button
+            document.getElementById('add-tag').addEventListener('click', () => {
+                const tagInput = document.getElementById('tag-input');
+                const tagText = tagInput.value.trim();
+                
+                if (tagText) {
+                    addTagToUI(tagText);
+                    tagInput.value = '';
+                }
+            });
+            
+            // Tag input enter key
+            document.getElementById('tag-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const tagText = e.target.value.trim();
+                    
+                    if (tagText) {
+                        addTagToUI(tagText);
+                        e.target.value = '';
+                    }
+                    
+                    e.preventDefault();
+                }
+            });
+            
+            // Clear filters button
+            document.getElementById('clear-filters').addEventListener('click', () => {
+                activeFilters = [];
+                renderTimeline();
+            });
+            
+            // Export data button
+            document.getElementById('export-data').addEventListener('click', () => {
+                const exportArea = document.getElementById('export-area');
+                exportArea.style.display = 'block';
+                
+                // Create structured data for LLM analysis
+                const structuredData = {
+                    title: "Puppy Temperament Assessment",
+                    events: events.map(event => ({
+                        timestamp: event.time,
+                        seconds: timeToSeconds(event.time),
+                        behavior: event.description,
+                        temperament_traits: event.tags
+                    }))
+                };
+                
+                exportArea.value = JSON.stringify(structuredData, null, 2);
+            });
+            
+            // Save to LocalStorage button
+            document.getElementById('save-local').addEventListener('click', () => {
+                saveToLocalStorage();
+                alert('Data saved to browser storage! It will be available when you open this page again.');
+            });
+            
+            // Download JSON button
+            document.getElementById('download-json').addEventListener('click', () => {
+                downloadJson();
+            });
+            
+            // Import data button
+            document.getElementById('import-data').addEventListener('click', () => {
+                const importText = prompt("Paste JSON data or enter minimalistic/detailed timecodes:");
+                
+                if (importText) {
+                    try {
+                        // Try to parse as JSON first
+                        const importedData = JSON.parse(importText);
+                        if (importedData.events) {
+                            events = importedData.events.map(e => ({
+                                time: e.timestamp || formatTime(e.seconds),
+                                description: e.behavior,
+                                tags: e.temperament_traits || []
+                            }));
+                        }
+                    } catch (e) {
+                        // Not valid JSON, try parsing as text timecodes
+                        processTextTimecodes(importText);
+                    }
+                    
+                    renderTimeline();
+                    saveToLocalStorage(); // Auto-save imported data
+                }
+            });
+        }
+        
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            try {
+                const dataToSave = {
+                    videoId: document.getElementById('video-id').value,
+                    events: events,
+                    savedAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('puppyAssessmentData', JSON.stringify(dataToSave));
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+            }
+        }
+        
+        // Load data from localStorage
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('puppyAssessmentData');
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    
+                    // Load events
+                    if (parsedData.events && parsedData.events.length > 0) {
+                        events = parsedData.events;
+                    }
+                    
+                    // Load video ID if present
+                    if (parsedData.videoId) {
+                        document.getElementById('video-id').value = parsedData.videoId;
+                    }
+                    
+                    renderTimeline();
+                    return true;
+                }
+            } catch (e) {
+                console.error('Failed to load from localStorage:', e);
+            }
+            return false;
+        }
+        
+        // Download JSON file
+        function downloadJson() {
+            const dataToSave = {
+                videoId: document.getElementById('video-id').value,
+                events: events,
+                exportedAt: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(dataToSave, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileName = 'puppy_assessment_' + new Date().toISOString().slice(0,10) + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileName);
+            linkElement.click();
+        }
+        
+        // Process text-based timecodes
+        function processTextTimecodes(text) {
+            // Regex to match time codes in the format 00:00 or ***00:00*** or ****00:00****
+            const timeRegex = /(\*{0,4})(\d{2}:\d{2})(\*{0,4})/g;
+            
+            let matches;
+            let lastMatch = null;
+            let lastIndex = 0;
+            const newEvents = [];
+            
+            // Split text by lines for easier processing
+            const lines = text.split('\n');
+            
+            for (const line of lines) {
+                if (line.trim() === '') continue;
+                
+                // Reset regex state
+                timeRegex.lastIndex = 0;
+                
+                // First, check if the line has a simple timestamp format like "00:17 - Description"
+                const simpleMatch = line.match(/^(\d{2}:\d{2}) - (.+)$/);
+                if (simpleMatch) {
+                    newEvents.push({
+                        time: simpleMatch[1],
+                        description: simpleMatch[2],
+                        tags: []
+                    });
+                    continue;
+                }
+                
+                // For more complex formats with timestamps embedded in text
+                while ((matches = timeRegex.exec(line)) !== null) {
+                    const time = matches[2];
+                    
+                    // If there was a previous match, create an event from last time to current description
+                    if (lastMatch) {
+                        const description = line.substring(lastIndex, matches.index).trim();
+                        if (description) {
+                            newEvents.push({
+                                time: lastMatch,
+                                description,
+                                tags: []
+                            });
+                        }
+                    }
+                    
+                    lastMatch = time;
+                    lastIndex = matches.index + matches[0].length;
+                }
+                
+                // Add the remaining description after the last timestamp
+                if (lastMatch && lastIndex < line.length) {
+                    const description = line.substring(lastIndex).trim();
+                    if (description) {
+                        newEvents.push({
+                            time: lastMatch,
+                            description,
+                            tags: []
+                        });
+                        lastMatch = null;
+                        lastIndex = 0;
+                    }
+                }
+            }
+            
+            // If we found any new events, add them to our events array
+            if (newEvents.length > 0) {
+                events = events.concat(newEvents);
+            }
+        }
+        
+        // Initialize the application
+        function init() {
+            loadYouTubeAPI();
+            setupEventListeners();
+            
+            // Try to load from localStorage first
+            const loaded = loadFromLocalStorage();
+            
+            // If nothing was loaded, initialize with sample data
+            if (!loaded) {
+                initializeWithSampleData();
+            }
+            
+            // Initialize tag filters UI
+            updateTagFiltersUI();
+            
+            // Show a welcome message with brief instructions
+            setTimeout(() => {
+                alert('Welcome to the Puppy Temperament Assessment Tracker!\n\n' + 
+                      '• Click on timestamps to jump to that point in the video\n' +
+                      '• Click on any tag to filter events by that tag\n' +
+                      '• Your data is automatically saved in your browser\n' +
+                      '• Use "Download JSON" to save your work as a file');
+            }, 1000);
+        }
+        
+        // Start the application when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
