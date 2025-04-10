@@ -204,35 +204,84 @@
         
         // YouTube API integration
         function loadYouTubeAPI() {
+            // First, define the onYouTubeIframeAPIReady function before loading the API
+            window.onYouTubeIframeAPIReady = function() {
+                console.log("YouTube API Ready!");
+                // Initialize player if there's a video ID
+                const videoId = document.getElementById('video-id').value.trim();
+                if (videoId) {
+                    loadPlayer(videoId);
+                }
+            };
+            
+            // Then load the API
             const tag = document.createElement('script');
             tag.src = "https://www.youtube.com/iframe_api";
             const firstScriptTag = document.getElementsByTagName('script')[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         }
         
-        window.onYouTubeIframeAPIReady = function() {
-            // YouTube API is ready, but we'll load the video when the user clicks the button
-            document.getElementById('load-video').addEventListener('click', function() {
-                const videoId = document.getElementById('video-id').value.trim();
-                if (videoId) {
-                    if (player) {
-                        player.loadVideoById(videoId);
-                    } else {
-                        player = new YT.Player('youtube-player', {
-                            videoId: videoId,
-                            events: {
-                                'onReady': onPlayerReady
-                            }
-                        });
-                    }
-                } else {
-                    alert('Please enter a YouTube Video ID');
+        function loadPlayer(videoId) {
+            console.log("Loading player with video ID:", videoId);
+            
+            // Clean up any existing player
+            const playerFrame = document.getElementById('youtube-player');
+            
+            try {
+                if (player) {
+                    player.destroy();
                 }
-            });
-        };
+            } catch (e) {
+                console.log("No previous player to destroy");
+            }
+            
+            // Update iframe directly with proper parameters
+            const iframe = document.createElement('iframe');
+            iframe.id = 'youtube-player';
+            iframe.width = "560";
+            iframe.height = "315";
+            iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${window.location.origin}`;
+            iframe.frameBorder = "0";
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+            iframe.allowFullscreen = true;
+            
+            const container = document.querySelector('.video-container');
+            container.innerHTML = '';
+            container.appendChild(iframe);
+            
+            // Create player object after a short delay
+            setTimeout(() => {
+                try {
+                    player = new YT.Player('youtube-player', {
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onError': onPlayerError
+                        }
+                    });
+                } catch (e) {
+                    console.error("Error initializing YouTube player:", e);
+                }
+            }, 500);
+        }
         
         function onPlayerReady(event) {
+            console.log("Player ready!");
             event.target.pauseVideo();
+        }
+        
+        function onPlayerError(event) {
+            console.error("YouTube player error:", event.data);
+            
+            const errorMessages = {
+                2: "The request contains an invalid parameter value.",
+                5: "The requested content cannot be played in an HTML5 player.",
+                100: "The video requested was not found. This error occurs when a video has been removed or marked as private.",
+                101: "The owner of the requested video does not allow it to be played in embedded players.",
+                150: "The owner of the requested video does not allow it to be played in embedded players."
+            };
+            
+            const errorMessage = errorMessages[event.data] || "An unknown error occurred.";
+            alert(`YouTube Error: ${errorMessage}`);
         }
         
         // Helper function to convert time string to seconds
@@ -462,6 +511,16 @@
                 currentEventIndex = events.length - 1;
                 displayEventDetails(newEvent);
                 renderTimeline();
+            });
+            
+            // Load video button
+            document.getElementById('load-video').addEventListener('click', function() {
+                const videoId = document.getElementById('video-id').value.trim();
+                if (videoId) {
+                    loadPlayer(videoId);
+                } else {
+                    alert('Please enter a YouTube Video ID');
+                }
             });
             
             // Save event button
