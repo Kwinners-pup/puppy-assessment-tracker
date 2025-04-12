@@ -150,7 +150,7 @@
         <input type="text" id="video-id" placeholder="Enter YouTube Video ID" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; width: 250px;">
         <button id="load-video">Load Video</button>
         <button id="import-data">Import Data</button>
-        <button id="export-data">Export Data for LLM</button>
+        <input type="file" id="file-upload" accept=".json" style="display: none;">
         <button id="save-local">Save to Local Storage</button>
         <button id="download-json">Download JSON</button>
         <div style="flex-grow: 1;"></div>
@@ -189,12 +189,15 @@
                         <!-- Tags will be added here -->
                     </div>
                 </div>
-                <button id="save-event" style="margin-top: 10px;">Save Event</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button id="save-event">Save Event</button>
+                    <button id="delete-event" style="background-color: #e74c3c;">Delete Event</button>
+                </div>
             </div>
         </div>
     </div>
     
-    <textarea id="export-area"></textarea>
+    <textarea id="export-area" style="display: none;"></textarea>
     
     <script>
         // Initialize variables
@@ -513,6 +516,28 @@
                 renderTimeline();
             });
             
+            // Delete event button
+            document.getElementById('delete-event').addEventListener('click', () => {
+                if (currentEventIndex >= 0 && currentEventIndex < events.length) {
+                    if (confirm("Are you sure you want to delete this event?")) {
+                        events.splice(currentEventIndex, 1);
+                        currentEventIndex = events.length > 0 ? 0 : -1;
+                        
+                        if (currentEventIndex >= 0) {
+                            displayEventDetails(events[currentEventIndex]);
+                        } else {
+                            // Clear the form if no events left
+                            document.getElementById('event-time-input').value = "";
+                            document.getElementById('event-description-input').value = "";
+                            document.getElementById('tags-container').innerHTML = "";
+                        }
+                        
+                        renderTimeline();
+                        saveToLocalStorage();
+                    }
+                }
+            });
+            
             // Load video button
             document.getElementById('load-video').addEventListener('click', function() {
                 const videoId = document.getElementById('video-id').value.trim();
@@ -577,25 +602,6 @@
                 renderTimeline();
             });
             
-            // Export data button
-            document.getElementById('export-data').addEventListener('click', () => {
-                const exportArea = document.getElementById('export-area');
-                exportArea.style.display = 'block';
-                
-                // Create structured data for LLM analysis
-                const structuredData = {
-                    title: "Puppy Temperament Assessment",
-                    events: events.map(event => ({
-                        timestamp: event.time,
-                        seconds: timeToSeconds(event.time),
-                        behavior: event.description,
-                        temperament_traits: event.tags
-                    }))
-                };
-                
-                exportArea.value = JSON.stringify(structuredData, null, 2);
-            });
-            
             // Save to LocalStorage button
             document.getElementById('save-local').addEventListener('click', () => {
                 saveToLocalStorage();
@@ -607,29 +613,84 @@
                 downloadJson();
             });
             
+            // File upload listener
+            document.getElementById('file-upload').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        try {
+                            const importedData = JSON.parse(event.target.result);
+                            if (importedData.events) {
+                                events = importedData.events.map(e => ({
+                                    time: e.time || e.timestamp || formatTime(e.seconds || 0),
+                                    description: e.description || e.behavior || "",
+                                    tags: e.tags || e.temperament_traits || []
+                                }));
+                                
+                                // If video ID was saved, load it
+                                if (importedData.videoId) {
+                                    document.getElementById('video-id').value = importedData.videoId;
+                                }
+                                
+                                renderTimeline();
+                                saveToLocalStorage();
+                                alert('Data imported successfully!');
+                            } else {
+                                alert('The JSON file does not contain event data in the expected format.');
+                            }
+                        } catch (error) {
+                            alert('Failed to parse JSON file: ' + error.message);
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                }
+            });
+            
             // Import data button
             document.getElementById('import-data').addEventListener('click', () => {
-                const importText = prompt("Paste JSON data or enter minimalistic/detailed timecodes:");
+                // First try to get file upload
+                const fileUpload = document.getElementById('file-upload');
+                fileUpload.click();
                 
-                if (importText) {
-                    try {
-                        // Try to parse as JSON first
-                        const importedData = JSON.parse(importText);
-                        if (importedData.events) {
-                            events = importedData.events.map(e => ({
-                                time: e.timestamp || formatTime(e.seconds),
-                                description: e.behavior,
-                                tags: e.temperament_traits || []
-                            }));
-                        }
-                    } catch (e) {
-                        // Not valid JSON, try parsing as text timecodes
-                        processTextTimecodes(importText);
-                    }
+                // Also allow text input
+                setTimeout(() => {
+                    const importText = prompt("Or paste JSON data or enter minimalistic/detailed timecodes:");
                     
-                    renderTimeline();
-                    saveToLocalStorage(); // Auto-save imported data
-                }
+                    if (importText) {
+                        try {
+                            // Try to parse as JSON first
+                            const importedData = JSON.parse(importText);
+                            if (importedData.events) {
+                                events = importedData.events.map(e => ({
+                                    time: e.time || e.timestamp || formatTime(e.seconds || 0),
+                                    description: e.description || e.behavior || "",
+                                    tags: e.tags || e.temperament_traits || []
+                                }));
+                                
+                                // If video ID was saved, load it
+                                if (importedData.videoId) {
+                                    document.getElementById('video-id').value = importedData.videoId;
+                                }
+                            } else {
+                                alert('The JSON data does not contain event data in the expected format.');
+                                return;
+                            }
+                        } catch (e) {
+                            // Not valid JSON, try parsing as text timecodes
+                            if (importText.trim()) {
+                                processTextTimecodes(importText);
+                            } else {
+                                return; // Nothing to import
+                            }
+                        }
+                        
+                        renderTimeline();
+                        saveToLocalStorage(); // Auto-save imported data
+                    }
+                }, 1000); // Give time for file dialog to be dismissed if unused
             });
         }
         
@@ -785,8 +846,9 @@
                 alert('Welcome to the Puppy Temperament Assessment Tracker!\n\n' + 
                       '• Click on timestamps to jump to that point in the video\n' +
                       '• Click on any tag to filter events by that tag\n' +
-                      '• Your data is automatically saved in your browser\n' +
-                      '• Use "Download JSON" to save your work as a file');
+                      '• Use "Delete Event" to remove unwanted events\n' +
+                      '• Use "Import Data" to load data from a JSON file\n' +
+                      '• Your data is automatically saved in your browser');
             }, 1000);
         }
         
