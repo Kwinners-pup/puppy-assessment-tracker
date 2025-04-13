@@ -136,6 +136,43 @@
         .highlight {
             background-color: #fff9c4 !important;
         }
+        /* Help modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 70%;
+            max-width: 700px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover {
+            color: #555;
+        }
+        .help-section {
+            margin-bottom: 15px;
+        }
+        .help-section h3 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -149,10 +186,12 @@
     <div class="controls">
         <input type="text" id="video-id" placeholder="Enter YouTube Video ID" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; width: 250px;">
         <button id="load-video">Load Video</button>
-        <button id="import-data">Import Data</button>
+        <button id="import-data">Import JSON</button>
         <input type="file" id="file-upload" accept=".json" style="display: none;">
-        <button id="save-local">Save to Local Storage</button>
+        <button id="save-local">Save to Browser</button>
         <button id="download-json">Download JSON</button>
+        <button id="export-text">Export Text</button>
+        <button id="help-button" style="background-color: #27ae60;">Help</button>
         <div style="flex-grow: 1;"></div>
         <button id="add-event">Add New Event</button>
     </div>
@@ -198,6 +237,52 @@
     </div>
     
     <textarea id="export-area" style="display: none;"></textarea>
+    
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Puppy Temperament Assessment Tracker Help</h2>
+            
+            <div class="help-section">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li>Enter a YouTube Video ID (the part after "v=" in a YouTube URL) and click "Load Video"</li>
+                    <li>Click "Add New Event" to create timestamps for behaviors you observe</li>
+                    <li>Your data is automatically saved in your browser</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>Adding and Editing Events</h3>
+                <ul>
+                    <li>Click on any event in the timeline to edit it</li>
+                    <li>Enter a timestamp (MM:SS format), description, and tags</li>
+                    <li>Click "Save Event" to save your changes</li>
+                    <li>Click "Delete Event" to remove an event</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>Using Tags</h3>
+                <ul>
+                    <li>Add tags to categorize behaviors (e.g., "social", "fearful", "confident")</li>
+                    <li>Click on any tag in the timeline to filter events by that tag</li>
+                    <li>Use "Clear Filters" to show all events again</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>Importing and Exporting</h3>
+                <ul>
+                    <li>"Import JSON" - Upload a previously saved assessment file</li>
+                    <li>"Download JSON" - Save your assessment as a JSON file</li>
+                    <li>"Export Text" - Create a plain text version of your assessment</li>
+                    <li>"Save to Browser" - Manually save to your browser's storage</li>
+                </ul>
+            </div>
+        </div>
+    </div>
     
     <script>
         // Initialize variables
@@ -485,16 +570,56 @@
         // Initialize sample data
         function initializeWithSampleData() {
             events = [
-                { time: "00:17", description: "Dog places front paws on person's legs.", tags: ["social", "greeting"] },
-                { time: "00:43", description: "Two barks. First notices dog prop, about 8 body lengths away, takes one step forward, turns towards seated tester, barks twice while tossing head back, facing dog prop again.", tags: ["vocalization", "alertness", "visual sensitivity"] },
-                { time: "00:54", description: "Whine.", tags: ["vocalization", "stress"] },
-                { time: "01:14", description: "Dog places front paws on person's legs. Dog crawls into person's lap. Looks over tester's shoulder to visualize dog prop for 1 second until tester stands up.", tags: ["social", "seeking comfort"] },
-                { time: "01:31", description: "Whine then bark. Looks at tester, then at dog prop about 7 body lengths away, steps toward it, whines briefly, then barks and turns away with ears to sides/back. Continues to whine briefly.", tags: ["vocalization", "stress", "fear"] },
-                { time: "01:39", description: "Tester walks across room.", tags: ["human movement"] },
-                { time: "01:47", description: "Barks.", tags: ["vocalization"] },
-                { time: "01:53", description: "Beginning of Biddability exercise.", tags: ["test section"] },
-                { time: "02:40", description: "Barks.", tags: ["vocalization"] },
-                { time: "05:20", description: "Barks.", tags: ["vocalization"] }
+                { 
+                    time: "00:17", 
+                    description: "Seger approaches the seated tester indirectly at her right/front side, unprompted. He begins to wag tail, with a sweeping low wag below his topline. His ears turned slightly to the sides. He reaches her at 0:18 and first sniffs her arm and lap before crawling up to lick her face at 00:22.", 
+                    tags: ["social", "greeting"] 
+                },
+                { 
+                    time: "00:40", 
+                    description: "First notices dog prop, about 8 body lengths away, ears forward, tail down, turns to look at the the seated tester, whines, then barks. He glances back at the dog for 1 sec, then barks once more and moves off-camera.", 
+                    tags: ["vocalization", "alertness", "visual sensitivity"] 
+                },
+                { 
+                    time: "00:54", 
+                    description: "Whines off-camera, then gallops towards seated tester, briefly glancing down at a prop that he passes on his right before looking up ahead again, ears forward, with tail wagging mostly on his right side, until he reaches the tester, where it wags more fully on both sides in a circular pattern as he places the front half of his body into the tester's lap.", 
+                    tags: ["vocalization", "stress", "social", "seeking comfort"] 
+                },
+                { 
+                    time: "01:14", 
+                    description: "Dog places front paws on person's legs. Dog crawls into person's lap. Looks over tester's shoulder to visualize dog prop for 1 second until tester stands up.", 
+                    tags: ["social", "seeking comfort"] 
+                },
+                { 
+                    time: "01:31", 
+                    description: "Whine then bark. Looks at tester, then at dog prop about 7 body lengths away, steps toward it, whines briefly, then barks and turns away with ears to sides/back. Continues to whine briefly.", 
+                    tags: ["vocalization", "stress", "fear"] 
+                },
+                { 
+                    time: "01:39", 
+                    description: "Tester walks across room.", 
+                    tags: ["human movement"] 
+                },
+                { 
+                    time: "01:47", 
+                    description: "Barks.", 
+                    tags: ["vocalization"] 
+                },
+                { 
+                    time: "01:53", 
+                    description: "Beginning of Biddability exercise.", 
+                    tags: ["test section"] 
+                },
+                { 
+                    time: "02:40", 
+                    description: "Barks.", 
+                    tags: ["vocalization"] 
+                },
+                { 
+                    time: "05:20", 
+                    description: "Barks.", 
+                    tags: ["vocalization"] 
+                }
             ];
             
             renderTimeline();
@@ -613,6 +738,13 @@
                 downloadJson();
             });
             
+            // Import data button - now only file upload
+            document.getElementById('import-data').addEventListener('click', () => {
+                // Only use file upload now
+                const fileUpload = document.getElementById('file-upload');
+                fileUpload.click();
+            });
+            
             // File upload listener
             document.getElementById('file-upload').addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
@@ -649,48 +781,27 @@
                 }
             });
             
-            // Import data button
-            document.getElementById('import-data').addEventListener('click', () => {
-                // First try to get file upload
-                const fileUpload = document.getElementById('file-upload');
-                fileUpload.click();
-                
-                // Also allow text input
-                setTimeout(() => {
-                    const importText = prompt("Or paste JSON data or enter minimalistic/detailed timecodes:");
-                    
-                    if (importText) {
-                        try {
-                            // Try to parse as JSON first
-                            const importedData = JSON.parse(importText);
-                            if (importedData.events) {
-                                events = importedData.events.map(e => ({
-                                    time: e.time || e.timestamp || formatTime(e.seconds || 0),
-                                    description: e.description || e.behavior || "",
-                                    tags: e.tags || e.temperament_traits || []
-                                }));
-                                
-                                // If video ID was saved, load it
-                                if (importedData.videoId) {
-                                    document.getElementById('video-id').value = importedData.videoId;
-                                }
-                            } else {
-                                alert('The JSON data does not contain event data in the expected format.');
-                                return;
-                            }
-                        } catch (e) {
-                            // Not valid JSON, try parsing as text timecodes
-                            if (importText.trim()) {
-                                processTextTimecodes(importText);
-                            } else {
-                                return; // Nothing to import
-                            }
-                        }
-                        
-                        renderTimeline();
-                        saveToLocalStorage(); // Auto-save imported data
-                    }
-                }, 1000); // Give time for file dialog to be dismissed if unused
+            // Export text button
+            document.getElementById('export-text').addEventListener('click', () => {
+                exportPlainText();
+            });
+            
+            // Help button
+            document.getElementById('help-button').addEventListener('click', () => {
+                document.getElementById('help-modal').style.display = 'block';
+            });
+            
+            // Close modal
+            document.querySelector('.close-modal').addEventListener('click', () => {
+                document.getElementById('help-modal').style.display = 'none';
+            });
+            
+            // Close modal if clicked outside
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('help-modal');
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
             });
         }
         
@@ -825,6 +936,31 @@
             }
         }
         
+        // Export to plain text format
+        function exportPlainText() {
+            // Sort events by time
+            const sortedEvents = [...events].sort((a, b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+            
+            // Generate formatted text
+            let textContent = "";
+            
+            sortedEvents.forEach(event => {
+                textContent += `${event.time}:\n${event.description}\n\n`;
+            });
+            
+            // Create and download as a text file
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'puppy_assessment_' + new Date().toISOString().slice(0,10) + '.txt';
+            a.click();
+            
+            // Clean up
+            URL.revokeObjectURL(url);
+        }
+        
         // Initialize the application
         function init() {
             loadYouTubeAPI();
@@ -840,16 +976,6 @@
             
             // Initialize tag filters UI
             updateTagFiltersUI();
-            
-            // Show a welcome message with brief instructions
-            setTimeout(() => {
-                alert('Welcome to the Puppy Temperament Assessment Tracker!\n\n' + 
-                      '• Click on timestamps to jump to that point in the video\n' +
-                      '• Click on any tag to filter events by that tag\n' +
-                      '• Use "Delete Event" to remove unwanted events\n' +
-                      '• Use "Import Data" to load data from a JSON file\n' +
-                      '• Your data is automatically saved in your browser');
-            }, 1000);
         }
         
         // Start the application when page loads
