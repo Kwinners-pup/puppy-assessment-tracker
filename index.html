@@ -23,8 +23,7 @@
         .video-and-editor {
             display: flex;
             gap: 20px;
-            /* Responsive layout */
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            height: calc(100vh - 200px);
         }
         .video-side {
             flex: 1;
@@ -34,7 +33,10 @@
         }
         .editor-side {
             flex: 1;
-            min-width: 300px; /* Ensure minimum width */
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         .video-container {
             position: relative;
@@ -69,14 +71,11 @@
             background-color: #999999;
         }
         .timeline {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            /* Adjusted height calculation */
-            height: calc(100vh - 250px); /* Adjust base value as needed */
-            min-height: 300px; /* Ensure a minimum height */
+            flex: 1;
             overflow-y: auto;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 12px;
         }
         .event-item {
             padding: 10px;
