@@ -19,11 +19,13 @@
         .main-container {
             display: flex;
             flex-direction: column;
+            height: calc(100vh - 100px); /* Adjust this based on your header size */
         }
         .video-and-editor {
             display: flex;
             gap: 20px;
-            height: calc(100vh - 200px);
+            height: 100%;
+            align-items: stretch;
         }
         .video-side {
             flex: 1;
@@ -260,7 +262,8 @@ textarea#event-description-input:focus {
         <button id="export-text">Export Text</button>
         <button id="help-button" style="background-color: #999999;">Help</button>
         <!-- Removed the spacer div, flex-wrap handles layout -->
-        <button id="add-event" style="margin-left: auto;">Add New Event</button> <!-- Moved Add Event button to the right -->
+        <button id="add-event" title="Add New Event" style="margin-left: auto; font-size: 20px; border-radius: 50%; width: 40px; height: 40px; background-color: #4f46e5; color: white;">＋</button>
+ <!-- Moved Add Event button to the right -->
     </div>
 
     <div class="filter-container" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -995,8 +998,20 @@ textarea#event-description-input:focus {
             loadYouTubeAPI(); // Load YouTube API last, it will load the player if videoId is present
         }
 
-        // Start the application when the DOM is fully loaded
-        window.addEventListener('DOMContentLoaded', init);
+        // Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    // Avoid triggering shortcuts while typing
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+    if (e.key === 'n' || e.key === 'N') {
+        document.getElementById('add-event').click();
+    } else if (e.key === 'd' || e.key === 'D') {
+        document.getElementById('delete-event').click();
+    }
+});
+
+// Start the application
+window.addEventListener('DOMContentLoaded', init);
 
     </script>
 </body>
