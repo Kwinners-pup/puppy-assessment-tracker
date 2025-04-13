@@ -25,11 +25,12 @@
         .video-and-editor {
             display: flex;
             gap: 20px;
-            flex-wrap: wrap;
         }
         .video-side {
             flex: 1;
             min-width: 300px;
+            display: flex;
+            flex-direction: column;
         }
         .editor-side {
             flex: 1;
@@ -40,7 +41,7 @@
             padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .video-container iframe {
             position: absolute;
@@ -72,9 +73,9 @@
             border-radius: 4px;
             padding: 15px;
             background-color: #f9f9f9;
-            height: 400px;
+            height: calc(100vh - 190px);
             overflow-y: auto;
-            margin-top: 20px;
+            margin-top: 0;
         }
         .event-item {
             padding: 10px;
@@ -114,10 +115,11 @@
             border-radius: 4px;
             padding: 15px;
             background-color: white;
+            flex-grow: 1;
         }
         textarea {
             width: 100%;
-            min-height: 120px;
+            min-height: 180px;
             margin-bottom: 10px;
             padding: 10px;
             border: 1px solid #ddd;
@@ -185,16 +187,12 @@
             margin-bottom: 8px;
             color: #2c3e50;
         }
-        @media (max-width: 768px) {
-            .video-and-editor {
-                flex-direction: column;
-            }
-        }
+    </style>
     </style>
     </style>
 </head>
 <body>
-    <h1>Puppy Temperament Assessment Tracker</h1>
+    <h1>Temperament Assessment Tracker</h1>
     
     <div class="controls">
         <input type="text" id="video-id" placeholder="Enter YouTube Video ID" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; width: 250px;">
@@ -207,6 +205,59 @@
         <button id="help-button" style="background-color: #27ae60;">Help</button>
         <div style="flex-grow: 1;"></div>
         <button id="add-event">Add New Event</button>
+    </div>
+    
+    <div class="filter-container" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+        <label><strong>Filter by tags:</strong></label>
+        <div id="tag-filters" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+        <button id="clear-filters" style="margin-left: auto;">Clear Filters</button>
+    </div>
+    
+    <div class="main-container">
+        <div class="video-and-editor">
+            <!-- Left side - Video and Form -->
+            <div class="video-side">
+                <div class="video-container">
+                    <!-- Replace VIDEO_ID with your YouTube video ID -->
+                    <iframe id="youtube-player" width="560" height="315" src="about:blank" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                
+                <div class="details-panel" id="event-details" style="margin-top: 10px;">
+                    <div id="edit-form">
+                        <div class="form-group">
+                            <label for="event-time-input">Time (MM:SS):</label>
+                            <input type="text" id="event-time-input" placeholder="00:00" style="width: 100px; padding: 5px; margin-bottom: 10px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-description-input">Description:</label>
+                            <textarea id="event-description-input" placeholder="Describe what happens at this timestamp..." style="min-height: 180px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Tags:</label>
+                            <div class="tag-input">
+                                <input type="text" id="tag-input" placeholder="Add temperament trait tag (e.g., fearful, confident)">
+                                <button id="add-tag">Add Tag</button>
+                            </div>
+                            <div id="tags-container" class="event-tags">
+                                <!-- Tags will be added here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button id="save-event">Save Event</button>
+                            <button id="delete-event" style="background-color: #e74c3c;">Delete Event</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right side - Timeline (fills available space) -->
+            <div class="editor-side">
+                <div class="timeline" id="events-timeline" style="height: calc(100vh - 230px); margin-top: 0;">
+                    <!-- Events will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div> Event</button>
     </div>
     
     <div class="filter-container" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
