@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Puppy Temperament Assessment Tracker</title>
     <style>
+    <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -15,6 +16,24 @@
         }
         h1, h2 {
             color: #2c3e50;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .video-and-editor {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .video-side {
+            flex: 1;
+            min-width: 300px;
+        }
+        .editor-side {
+            flex: 1;
+            min-width: 300px;
         }
         .video-container {
             position: relative;
@@ -48,18 +67,14 @@
         button:hover {
             background-color: #2980b9;
         }
-        .events-container {
-            display: flex;
-            gap: 20px;
-        }
         .timeline {
-            flex: 1;
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 15px;
             background-color: #f9f9f9;
-            height: 500px;
+            height: 400px;
             overflow-y: auto;
+            margin-top: 20px;
         }
         .event-item {
             padding: 10px;
@@ -95,17 +110,14 @@
             font-size: 12px;
         }
         .details-panel {
-            flex: 1;
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 15px;
             background-color: white;
-            height: 500px;
-            overflow-y: auto;
         }
         textarea {
             width: 100%;
-            min-height: 100px;
+            min-height: 120px;
             margin-bottom: 10px;
             padding: 10px;
             border: 1px solid #ddd;
@@ -173,15 +185,16 @@
             margin-bottom: 8px;
             color: #2c3e50;
         }
+        @media (max-width: 768px) {
+            .video-and-editor {
+                flex-direction: column;
+            }
+        }
+    </style>
     </style>
 </head>
 <body>
     <h1>Puppy Temperament Assessment Tracker</h1>
-    
-    <div class="video-container">
-        <!-- Replace VIDEO_ID with your YouTube video ID -->
-        <iframe id="youtube-player" width="560" height="315" src="about:blank" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </div>
     
     <div class="controls">
         <input type="text" id="video-id" placeholder="Enter YouTube Video ID" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; width: 250px;">
@@ -202,35 +215,49 @@
         <button id="clear-filters" style="margin-left: auto;">Clear Filters</button>
     </div>
     
-    <div class="events-container">
-        <div class="timeline" id="events-timeline">
-            <!-- Events will be inserted here -->
-        </div>
-        
-        <div class="details-panel" id="event-details">
-            <h3>Event Details</h3>
-            <div id="edit-form">
-                <div class="form-group">
-                    <label for="event-time-input">Time (MM:SS):</label>
-                    <input type="text" id="event-time-input" placeholder="00:00" style="width: 100px; padding: 5px; margin-bottom: 10px;">
+    <div class="main-container">
+        <div class="video-and-editor">
+            <!-- Left side - Video and Event Editor -->
+            <div class="video-side">
+                <div class="video-container">
+                    <!-- Replace VIDEO_ID with your YouTube video ID -->
+                    <iframe id="youtube-player" width="560" height="315" src="about:blank" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
-                <div class="form-group">
-                    <label for="event-description-input">Description:</label>
-                    <textarea id="event-description-input" placeholder="Describe what happens at this timestamp..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Tags:</label>
-                    <div class="tag-input">
-                        <input type="text" id="tag-input" placeholder="Add temperament trait tag (e.g., fearful, confident)">
-                        <button id="add-tag">Add Tag</button>
+                
+                <div class="details-panel" id="event-details">
+                    <h3>Event Details</h3>
+                    <div id="edit-form">
+                        <div class="form-group">
+                            <label for="event-time-input">Time (MM:SS):</label>
+                            <input type="text" id="event-time-input" placeholder="00:00" style="width: 100px; padding: 5px; margin-bottom: 10px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="event-description-input">Description:</label>
+                            <textarea id="event-description-input" placeholder="Describe what happens at this timestamp..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Tags:</label>
+                            <div class="tag-input">
+                                <input type="text" id="tag-input" placeholder="Add temperament trait tag (e.g., fearful, confident)">
+                                <button id="add-tag">Add Tag</button>
+                            </div>
+                            <div id="tags-container" class="event-tags">
+                                <!-- Tags will be added here -->
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button id="save-event">Save Event</button>
+                            <button id="delete-event" style="background-color: #e74c3c;">Delete Event</button>
+                        </div>
                     </div>
-                    <div id="tags-container" class="event-tags">
-                        <!-- Tags will be added here -->
-                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button id="save-event">Save Event</button>
-                    <button id="delete-event" style="background-color: #e74c3c;">Delete Event</button>
+            </div>
+            
+            <!-- Right side - Timeline -->
+            <div class="editor-side">
+                <h3>Timeline</h3>
+                <div class="timeline" id="events-timeline">
+                    <!-- Events will be inserted here -->
                 </div>
             </div>
         </div>
@@ -424,12 +451,23 @@
                 timeEl.addEventListener('click', () => {
                     if (player) {
                         player.seekTo(timeToSeconds(event.time));
+                        // Scroll the editor into view on mobile
+                        if (window.innerWidth <= 768) {
+                            document.getElementById('event-details').scrollIntoView({ behavior: 'smooth' });
+                        }
                     }
                 });
                 
                 const descEl = document.createElement('div');
                 descEl.className = 'event-description';
-                descEl.textContent = event.description;
+                
+                // Show truncated description in timeline if it's long
+                const maxLength = 100;
+                if (event.description.length > maxLength) {
+                    descEl.textContent = event.description.substring(0, maxLength) + '...';
+                } else {
+                    descEl.textContent = event.description;
+                }
                 
                 const tagsEl = document.createElement('div');
                 tagsEl.className = 'event-tags';
