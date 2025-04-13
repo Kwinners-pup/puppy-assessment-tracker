@@ -711,34 +711,39 @@ textarea#event-description-input:focus {
         function setupEventListeners() {
             document.getElementById('add-event').addEventListener('click', () => {
                  const currentTime = (player && typeof player.getCurrentTime === 'function')
-                                    ? formatTime(player.getCurrentTime())
-                                    : "00:00";
+        ? formatTime(player.getCurrentTime())
+        : "00:00";
 
-                const newEvent = { time: currentTime, description: "", tags: [] };
-                events.push(newEvent);
-                currentEventIndex = events.length - 1; // Set index to the new event
-                displayEventDetails(newEvent); // Show details for editing
-                renderTimeline(); // Update timeline to show new event (and highlight it)
-                document.getElementById('event-description-input').focus(); // Focus description for quick entry
-            });
+    const newEvent = { time: currentTime, description: "", tags: [] };
+    events.push(newEvent);
+    currentEventIndex = events.length - 1;
+    displayEventDetails(newEvent);
+    renderTimeline();
+
+    // Smooth scroll and focus
+    document.getElementById('event-description-input').focus();
+});
 
             document.getElementById('delete-event').addEventListener('click', () => {
-                if (currentEventIndex >= 0 && currentEventIndex < events.length) {
-                    if (confirm(`Delete event at ${events[currentEventIndex].time}?`)) {
-                        events.splice(currentEventIndex, 1);
-                        currentEventIndex = -1; // Reset index
-                        // Clear form after deletion
-                        document.getElementById('event-time-input').value = '';
-                        document.getElementById('event-description-input').value = '';
-                        document.getElementById('tags-container').innerHTML = '';
-                        document.getElementById('tag-input').value = '';
-                        renderTimeline();
-                        saveToLocalStorage();
-                    }
-                } else {
-                     alert("Select an event from the timeline to delete.");
-                }
-            });
+                if (currentEventIndex >= 0 && events.length > 0) {
+        const confirmed = confirm(`Are you sure you want to delete this event?`);
+        if (confirmed) {
+            events.splice(currentEventIndex, 1);
+            currentEventIndex = -1;
+
+            // Clear the editor
+            document.getElementById('event-time-input').value = '';
+            document.getElementById('event-description-input').value = '';
+            document.getElementById('tags-container').innerHTML = '';
+            document.getElementById('tag-input').value = '';
+
+            renderTimeline();
+            saveToLocalStorage();
+        }
+    } else {
+        alert("There's no event to delete.");
+    }
+});
 
             document.getElementById('load-video').addEventListener('click', () => {
                 const videoId = document.getElementById('video-id').value.trim();
@@ -978,8 +983,12 @@ textarea#event-description-input:focus {
             setupEventListeners();
             const loadedFromStorage = loadFromLocalStorage(); // Load first
 
-            if (!loadedFromStorage && events.length === 0) { // Only use sample data if nothing loaded AND events array is empty
-                initializeWithSampleData();
+            if (!loadedFromStorage && events.length === 0) { 
+            const newEvent = { time: "", description: "", tags: [] };
+            events.push(newEvent);
+            currentEventIndex = 0;
+            displayEventDetails(newEvent);
+            renderTimeline();
             }
 
             renderTimeline(); // Render whatever data we have (loaded or sample)
