@@ -6,7 +6,7 @@
     <title>Temperament Assessment Tracker</title>
     <style>
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
             max-width: 1200px;
             margin: 0 auto;
@@ -15,23 +15,6 @@
         }
         h1, h2 {
             color: #2c3e50;
-        }
-        input#event-time-input,
-        textarea#event-description-input {
-        font-size: 16px;
-        border-radius: 10px;
-        padding: 12px;
-        border: 1px solid #ccc;
-        width: 100%;
-        background-color: #f9f9f9;
-        transition: border-color 0.2s;
-        }
-
-        input#event-time-input:focus,
-        textarea#event-description-input:focus {
-        outline: none;
-        border-color: #4f46e5;
-        background-color: #fff;
         }
         .main-container {
             display: flex;
@@ -83,9 +66,7 @@
             transition: background-color 0.3s;
         }
         button:hover {
-            border-radius: 8px;
-            font-weight: 600;
-            background-color: #4338ca;
+            background-color: #2980b9;
         }
         .timeline {
             border: 1px solid #ddd;
@@ -98,15 +79,16 @@
             overflow-y: auto;
         }
         .event-item {
-            border-radius: 12px;
-            padding: 16px;
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
         .event-item:hover {
-            transform: scale(1.01);
-            background-color: #f3f4f6;
+            background-color: #ecf0f1;
         }
         .event-time {
             font-weight: bold;
@@ -124,11 +106,11 @@
             margin-top: 5px;
         }
         .tag {
-            background-color: #eef2ff;
-            color: #3730a3;
-            font-weight: 500;
-            border-radius: 9999px;
-            padding: 4px 10px;
+            background-color: #e0f7fa;
+            color: #00838f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
         }
         .details-panel {
             border: 1px solid #ddd;
@@ -674,6 +656,18 @@
                 alert("No timecodes in the format 'MM:SS - Description' found in the provided text.");
             }
         }
+
+        // Initialize with sample data (optional, can be removed if not needed)
+        function initializeWithSampleData() {
+            console.log("Initializing with sample data as no saved data found.");
+            events = [
+                { time: "00:17", description: "Approaches tester, low wag, sniffs then licks face.", tags: ["social", "greeting", "confident"] },
+                { time: "00:40", description: "Notices prop dog, ears forward, tail down, barks.", tags: ["vocalization", "alertness", "visual sensitivity", "caution"] },
+                { time: "00:54", description: "Whines, runs to tester, seeks comfort.", tags: ["vocalization", "stress", "social", "seeking comfort"] },
+                { time: "01:14", description: "Crawls into lap, looks at prop.", tags: ["social", "seeking comfort", "dependent"] },
+                { time: "01:31", description: "Whine/bark at prop, steps toward then away.", tags: ["vocalization", "stress", "fear", "avoidance"] },
+                { time: "01:53", description: "Start Biddability.", tags: ["test section", "biddability"] }
+            ];
             // No initial video ID for sample data
             document.getElementById('video-id').value = '';
         }
@@ -949,12 +943,8 @@
             setupEventListeners();
             const loadedFromStorage = loadFromLocalStorage(); // Load first
 
-            if (!loadedFromStorage && events.length === 0) {
-            // Start with one empty editable event
-            const newEvent = { time: "", description: "", tags: [] };
-            events.push(newEvent);
-            currentEventIndex = 0;
-            displayEventDetails(newEvent);
+            if (!loadedFromStorage && events.length === 0) { // Only use sample data if nothing loaded AND events array is empty
+                initializeWithSampleData();
             }
 
             renderTimeline(); // Render whatever data we have (loaded or sample)
